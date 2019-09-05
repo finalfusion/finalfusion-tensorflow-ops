@@ -1,0 +1,3 @@
+[submodule "finalfusion-cxx"]
+	path = finalfusion-cxx
+	url = https://github.com/finalfusion/finalfusion-cxx
