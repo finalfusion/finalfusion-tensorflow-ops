@@ -16,7 +16,7 @@ public:
   Status embedding(const string &word, std::vector<float> *result);
   size_t dimensions();
   bool initialized();
-  string DebugString() const override;
+  string DebugString() override;
 private:
   bool is_initialized_;
   std::unique_ptr<Embeddings> embeddings_;

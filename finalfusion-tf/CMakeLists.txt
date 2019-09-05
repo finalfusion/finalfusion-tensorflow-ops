@@ -2,7 +2,7 @@ list(GET TF_CFG 0 LIBTENSORFLOW_FRAMEWORK)
 list(GET TF_CFG 1 TF_INCLUDE)
 
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DNDEBUG")
-set(LIBTENSORFLOW_FRAMEWORK "${LIBTENSORFLOW_FRAMEWORK}/libtensorflow_framework.so.1")
+set(LIBTENSORFLOW_FRAMEWORK "${LIBTENSORFLOW_FRAMEWORK}/libtensorflow_framework.so")
 
 add_library(libtensorflow_framework SHARED IMPORTED GLOBAL)
 set_target_properties(libtensorflow_framework PROPERTIES

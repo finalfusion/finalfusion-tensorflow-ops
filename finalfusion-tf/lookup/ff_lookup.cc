@@ -47,7 +47,7 @@ bool FFLookup::initialized() {
   return is_initialized_;
 }
 
-string FFLookup::DebugString() const {
+string FFLookup::DebugString() {
   return "FFLookup";
 }
 
