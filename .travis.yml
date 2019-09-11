@@ -1,0 +1,18 @@
+dist: bionic
+addons:
+  apt:
+    packages:
+      - cmake
+      - python3.6-dev
+      - python3.6-venv
+matrix:
+  fast_finish: true
+  include:
+    - language: rust
+      os: linux
+      rust: stable
+install:
+  - python3.6 -m venv venv
+  - source venv/bin/activate
+  - pip install tensorflow
+script: ci/script.sh
