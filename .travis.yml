@@ -9,10 +9,25 @@ matrix:
   fast_finish: true
   include:
     - language: rust
+      rust: stable
+      os: osx
+      osx_image: xcode10.1
+    - language: rust
       os: linux
       rust: stable
+
 install:
-  - python3.6 -m venv venv
-  - source venv/bin/activate
-  - pip install tensorflow
+  - |
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      python3.6 -m venv venv
+      source venv/bin/activate
+      pip install tensorflow virtualenv
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install tensorflow virtualenv
+    fi
+
 script: ci/script.sh
