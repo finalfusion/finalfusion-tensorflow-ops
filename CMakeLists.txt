@@ -14,3 +14,4 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${CXX_11_ABI})
 
 add_subdirectory(finalfusion-cxx)
 add_subdirectory(finalfusion-tf)
+add_subdirectory(tests)
