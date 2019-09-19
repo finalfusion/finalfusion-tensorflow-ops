@@ -3,8 +3,7 @@ addons:
   apt:
     packages:
       - cmake
-      - python3.6-dev
-      - python3.6-venv
+
 matrix:
   fast_finish: true
   include:
@@ -12,15 +11,23 @@ matrix:
       rust: stable
       os: osx
       osx_image: xcode10.1
-    - language: rust
-      os: linux
-      rust: stable
+    - language: python
+      python: 3.6
+      addons:
+        apt:
+          packages:
+            - g++-4.8
+      env:
+        - CC=gcc-4.8
+        - CXX=g++-4.8
+    - language: python
+      python: 3.7
 
 install:
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      python3.6 -m venv venv
-      source venv/bin/activate
+      curl -sSf https://build.travis-ci.org/files/rustup-init.sh | sh -s -- -y
+      source $HOME/.cargo/env
       pip install tensorflow virtualenv pytest
     fi
   - |

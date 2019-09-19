@@ -56,4 +56,63 @@ public:
 };
 
 REGISTER_KERNEL_BUILDER(
-    Name("CloseFFEmbeddings").Device(DEVICE_CPU), CloseFFEmbeddingsOp);
+    Name("CloseFFEmbeddings").Device(DEVICE_CPU),
+    CloseFFEmbeddingsOp);
+
+class FFLookupOp : public OpKernel {
+public:
+  explicit FFLookupOp(OpKernelConstruction *context) : OpKernel(context) {
+    OP_REQUIRES_OK(context, context->GetAttr("mask_empty_string", &mask_empty_string_));
+    OP_REQUIRES_OK(context, context->GetAttr("mask_failed_lookup", &mask_failed_lookup_));
+    OP_REQUIRES_OK(context, context->GetAttr("embedding_len", &embedding_len_));
+  }
+
+  void Compute(OpKernelContext *context) override {
+    FFLookup *lookup;
+    OP_REQUIRES_OK(context, LookupResource(context, HandleFromInput(context, 0), &lookup));
+    core::ScopedUnref unref(lookup);
+
+    // verify length from construction with actual length
+    size_t const dims = lookup->dimensions();
+    if (embedding_len_ != -1) {
+      OP_REQUIRES(context,
+                  (dims == embedding_len_),
+                  errors::InvalidArgument("Actual embedding length (", dims, ") does not match provided length (",
+                                          embedding_len_, ")"));
+    }
+
+    // Get input tensor and flatten
+    Tensor const &query_tensor = context->input(1);
+    auto query = query_tensor.flat<string>();
+
+    // Set output shape: add new dim with dimensionality of embeddings
+    TensorShape out_shape(query_tensor.shape());
+    out_shape.AddDim(((int64) dims));
+
+    // Create output tensor and flatten
+    Tensor *output_tensor = nullptr;
+    OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &output_tensor));
+    auto output_flat = output_tensor->flat<float>();
+
+    for (int i = 0; i < query.size(); i++) {
+      std::vector<float> embedding = lookup->embedding(query(i));
+      // optionally mask failed lookups and/or empty string. Generally, empty string will lead to a failed lookup.
+      if ((query(i).empty() && mask_empty_string_) || (mask_failed_lookup_ && embedding.empty())) {
+        std::memset(&output_flat(i * dims), 0., dims * sizeof(float));
+      } else {
+        // if no masking attributes are set and the embedding is empty, return error.
+        OP_REQUIRES(context, !embedding.empty(), errors::InvalidArgument("Embedding lookup failed for: ", query(i)));
+        std::memcpy(&output_flat(i * dims), embedding.data(), dims * sizeof(float));
+      }
+    }
+  }
+
+private:
+  bool mask_empty_string_;
+  bool mask_failed_lookup_;
+  int embedding_len_;
+};
+
+REGISTER_KERNEL_BUILDER(
+    Name("FFLookup").Device(DEVICE_CPU),
+    FFLookupOp);
