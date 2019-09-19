@@ -22,4 +22,27 @@ namespace tensorflow {
   REGISTER_OP("CloseFFEmbeddings")
     .Input("embeds: resource")
     .SetShapeFn(shape_inference::NoOutputs);
+
+  REGISTER_OP("FFLookup")
+    .Input("embeds: resource")
+    .Input("query: string")
+    .Attr("embedding_len: int >= -1 = -1")
+    .Attr("mask_empty_string: bool = true")
+    .Attr("mask_failed_lookup: bool = true")
+    .Output("embeddings: float")
+    .SetShapeFn([](
+      ::tensorflow::shape_inference::InferenceContext *c
+    ) {
+      ShapeHandle strings_shape = c->input(1);
+      ShapeHandle output_shape;
+      int embedding_len;
+      TF_RETURN_IF_ERROR(c->GetAttr("embedding_len", &embedding_len));
+      TF_RETURN_IF_ERROR(
+        c->Concatenate(strings_shape, c->Vector(embedding_len), &output_shape)
+      );
+      ShapeHandle embeds = c->output(0);
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 0, &embeds));
+      c->set_output(0, output_shape);
+      return Status::OK();
+    });
 }
