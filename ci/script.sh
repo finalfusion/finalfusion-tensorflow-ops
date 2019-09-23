@@ -2,9 +2,6 @@
 
 set -euxo pipefail
 
-mkdir build
-cd build
-cmake ..
-make
-
-ctest -V
+python setup.py bdist_wheel
+pip install dist/*.whl
+python -c "import finalfusion_tensorflow"
