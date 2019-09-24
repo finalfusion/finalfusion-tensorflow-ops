@@ -110,9 +110,11 @@ class cmake_build_ext(build_ext):
 
 setup(
     author='The finalfusion authors',
+    author_email='sebastian.puetz@uni-tuebingen.de',
     cmdclass=dict(build_ext=cmake_build_ext),
     description='Tensorflow Ops for Finalfusion embeddings.',
     ext_modules=[CMakeExtension(name='finalfusion_tensorflow')],
+    license='BlueOak-1.0.0',
     name="finalfusion_tensorflow",
     packages=find_packages(where="./python"),
     package_dir={
