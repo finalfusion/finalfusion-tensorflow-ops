@@ -2,20 +2,30 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from pkg_resources import resource_filename
 import platform
 
 from tensorflow.python.framework import load_library
-from tensorflow.python.platform import resource_loader
 
 if platform.system() == "Darwin":
     LIB_SUFFIX = ".dylib"
 else:
     LIB_SUFFIX = ".so"
 
-finalfusion_ops = load_library.load_op_library(
-    resource_loader.get_path_to_datafile('./libfinalfusion_tf' + LIB_SUFFIX))
+_finalfusion_ops = load_library.load_op_library(resource_filename(__name__, "libfinalfusion_tf" + LIB_SUFFIX))
 
-ff_embeddings = finalfusion_ops.ff_embeddings
-initialize_ff_embeddings = finalfusion_ops.initialize_ff_embeddings
-ff_lookup = finalfusion_ops.ff_lookup
-close_ff_embeddings = finalfusion_ops.close_ff_embeddings
+
+def ff_embeddings(shared_name="", container="", name=""):
+    return _finalfusion_ops.ff_embeddings(shared_name, container, name)
+
+
+def initialize_ff_embeddings(embeddings, path="", mmap=False, name=""):
+    return _finalfusion_ops.initialize_ff_embeddings(embeddings, path, mmap, name)
+
+
+def ff_lookup(embeddings, query, embedding_len=-1, mask_empty_string=False, mask_failed_lookup=False, name=""):
+    return _finalfusion_ops.ff_lookup(embeddings, query, embedding_len, mask_empty_string, mask_failed_lookup, name)
+
+
+def close_ff_embeddings(embeddings, name=""):
+    return _finalfusion_ops.close_ff_embeddings(embeddings, name)
