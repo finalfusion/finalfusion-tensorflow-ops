@@ -2,6 +2,9 @@
 
 set -euxo pipefail
 
-python setup.py bdist_wheel
-pip install dist/*.whl
-python -c "import finalfusion_tensorflow"
+python setup.py build_ext --test install --verbose
+
+pushd tests
+pytest test_eager_mode.py
+pytest test_graph_mode.py
+popd
