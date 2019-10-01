@@ -81,6 +81,9 @@ class cmake_build_ext(build_ext):
     def finalize_options(self):
         build_ext.finalize_options(self)
 
+    def run(self):
+        self.build_extensions()
+
     def build_extensions(self):
         try:
             subprocess.check_output(['cmake', '--version'])
