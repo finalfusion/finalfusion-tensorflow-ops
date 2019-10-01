@@ -28,13 +28,13 @@ install:
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       curl -sSf https://build.travis-ci.org/files/rustup-init.sh | sh -s -- -y
       source $HOME/.cargo/env
-      pip install tensorflow virtualenv pytest
+      pip install tensorflow==1.14 virtualenv pytest
     fi
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       python3 -m venv venv
       source venv/bin/activate
-      pip install tensorflow virtualenv pytest
+      pip install tensorflow==1.14 virtualenv pytest
     fi
 
 script: ci/script.sh
