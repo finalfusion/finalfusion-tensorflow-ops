@@ -11,6 +11,14 @@ matrix:
       rust: stable
       os: osx
       osx_image: xcode10.1
+      env:
+        - TF_VER=1.14
+    - language: rust
+      rust: stable
+      os: osx
+      osx_image: xcode10.1
+      env:
+        - TF_VER=2
     - language: python
       python: 3.6
       addons:
@@ -20,21 +28,32 @@ matrix:
       env:
         - CC=gcc-4.8
         - CXX=g++-4.8
+        - TF_VER=1.14
     - language: python
       python: 3.7
+      env:
+        - TF_VER=1.14
+    - language: python
+      python: 3.7
+      addons:
+        apt:
+          packages:
+            - g++-8
+      env:
+        - TF_VER=2
 
 install:
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       curl -sSf https://build.travis-ci.org/files/rustup-init.sh | sh -s -- -y
       source $HOME/.cargo/env
-      pip install tensorflow==1.14 virtualenv pytest
+      pip install tensorflow==$TF_VER virtualenv pytest
     fi
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       python3 -m venv venv
       source venv/bin/activate
-      pip install tensorflow==1.14 virtualenv pytest
+      pip install tensorflow==$TF_VER virtualenv pytest
     fi
 
 script: ci/script.sh

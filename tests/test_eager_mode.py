@@ -3,7 +3,8 @@ import pytest
 import tensorflow as tf
 import finalfusion_tensorflow as ff_tf
 
-tf.enable_eager_execution()
+if tf.version.VERSION.startswith("1"):
+    tf.enable_eager_execution()
 
 
 def test_init_and_close():
