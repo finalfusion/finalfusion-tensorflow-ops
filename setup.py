@@ -72,16 +72,22 @@ class CMakeExtension(Extension):
 
 
 class cmake_build_ext(build_ext):
+    user_options = [('test', None, 'Test after building the extension.'), ]
+
+    def initialize_options(self):
+        build_ext.initialize_options(self)
+        self.test = False
+
+    def finalize_options(self):
+        build_ext.finalize_options(self)
+
     def build_extensions(self):
-        # Ensure that CMake is present and working
         try:
-            out = subprocess.check_output(['cmake', '--version'])
+            subprocess.check_output(['cmake', '--version'])
         except OSError:
             raise RuntimeError('Cannot find CMake executable')
 
         for ext in self.extensions:
-            extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-            extdir = os.path.join(extdir, ext.name, "ops")
             cfg = 'Debug' if self.debug else 'Release'
 
             cmake_args = [
@@ -96,16 +102,18 @@ class cmake_build_ext(build_ext):
                 print("Compiling with: {0}".format(os.environ['CXX']))
             # ensure CMake calls same Python exectuable
             os.environ['PYTHON_EXECUTABLE'] = sys.executable
-            if not os.path.exists(self.build_temp):
-                os.makedirs(self.build_temp)
+            self.mkpath(self.build_temp)
 
             subprocess.check_call(['cmake', ext.cmake_lists_dir] + cmake_args,
                                   cwd=self.build_temp)
             subprocess.check_call(['cmake', '--build', '.', '--config', cfg],
                                   cwd=self.build_temp)
-            subprocess.check_call(['ctest', '-V'], cwd=self.build_temp)
-            subprocess.check_call(
-                ['cp', os.path.join(self.build_temp, "finalfusion-tf", "libfinalfusion_tf" + LIB_SUFFIX), extdir])
+
+            op_dir = os.path.join(os.path.abspath(self.build_lib), ext.name, "ops")
+            self.mkpath(op_dir)
+            self.copy_file(os.path.join(self.build_temp, "finalfusion-tf", "libfinalfusion_tf" + LIB_SUFFIX), op_dir)
+            if self.test:
+                subprocess.check_call(['ctest', '-V'], cwd=self.build_temp)
 
 
 setup(
