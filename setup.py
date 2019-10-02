@@ -128,8 +128,6 @@ setup(
     package_dir={
         '': 'python',
     },
-    setup_requires=["tensorflow"],
-    install_requires=["tensorflow"],
     url='https://github.com/finalfusion/finalfusion-tensorflow',
     version='0.1.0',
 )
