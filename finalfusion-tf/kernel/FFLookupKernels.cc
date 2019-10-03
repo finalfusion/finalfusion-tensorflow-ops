@@ -1,6 +1,7 @@
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/resource_handle.h"
+#include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/framework/types.h"
 
 #include "finalfusion-cxx/Embeddings.hh"
@@ -18,18 +19,33 @@ public:
       : OpKernel(context) {}
 
   void Compute(OpKernelContext *context) override {
+    Tensor const *tmp;
+    OP_REQUIRES_OK(context, context->input("embeds", &tmp));
+    OP_REQUIRES(context, TensorShapeUtils::IsScalar(tmp->shape()),
+                errors::InvalidArgument("'embeds' must be of rank 0, not: ", tmp->shape().dims())
+    );
+    ResourceHandle embed_handle = tmp->flat<ResourceHandle>()(0);
+
     FFLookup *lookup;
     // verbosely fail if the lookup has been initialized before
-    bool const found = LookupResource(context, HandleFromInput(context, 0), &lookup).ok();
+    bool const found = LookupResource(context, embed_handle, &lookup).ok();
     if (found) {
       core::ScopedUnref unref(lookup);
       context->CtxFailure(errors::AlreadyExists("Lookup has already been created."));
     }
 
-    Tensor const *tmp;
     OP_REQUIRES_OK(context, context->input("filename", &tmp));
+    OP_REQUIRES(context, TensorShapeUtils::IsScalar(tmp->shape()),
+                errors::InvalidArgument("'filename' must be of rank 0, not: ",
+                                        tmp->shape().dims())
+    );
     string const path = tmp->scalar<string>()();
+
     OP_REQUIRES_OK(context, context->input("mmap", &tmp));
+    OP_REQUIRES(context, TensorShapeUtils::IsScalar(tmp->shape()),
+                errors::InvalidArgument("'mmap' must be of rank 0, not: ",
+                                        tmp->shape().dims())
+    );
     bool const mmap = tmp->scalar<bool>()();
 
     OP_REQUIRES_OK(context, LookupOrCreateResource<FFLookup>(
@@ -51,7 +67,13 @@ public:
       : OpKernel(context) {}
 
   void Compute(OpKernelContext *context) override {
-    OP_REQUIRES_OK(context, context->resource_manager()->Delete(HandleFromInput(context, 0)));
+    Tensor const *tmp;
+    OP_REQUIRES_OK(context, context->input("embeds", &tmp));
+    OP_REQUIRES(context, TensorShapeUtils::IsScalar(tmp->shape()),
+                errors::InvalidArgument("'embeds' must be of rank 0, not: ", tmp->shape().dims())
+    );
+    ResourceHandle embed_handle = tmp->flat<ResourceHandle>()(0);
+    OP_REQUIRES_OK(context, context->resource_manager()->Delete(embed_handle));
   }
 };
 
@@ -68,8 +90,14 @@ public:
   }
 
   void Compute(OpKernelContext *context) override {
+    Tensor const *tmp;
+    OP_REQUIRES_OK(context, context->input("embeds", &tmp));
+    OP_REQUIRES(context, TensorShapeUtils::IsScalar(tmp->shape()),
+                errors::InvalidArgument("'embeds' must be of rank 0, not: ", tmp->shape().dims())
+    );
+    ResourceHandle embed_handle = tmp->flat<ResourceHandle>()(0);
     FFLookup *lookup;
-    OP_REQUIRES_OK(context, LookupResource(context, HandleFromInput(context, 0), &lookup));
+    OP_REQUIRES_OK(context, LookupResource(context, embed_handle, &lookup));
     core::ScopedUnref unref(lookup);
 
     // verify length from construction with actual length
