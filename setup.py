@@ -30,7 +30,7 @@ def get_compiler_version():
         else:
             maximum_compiler_version = LooseVersion('999')
 
-        if len(tf_compiler_version.version) == 3:
+        if len(tf_compiler_version.version) >= 3:
             tf_compiler_version = LooseVersion(
                 str(tf_compiler_version.version[0]) + "." + str(tf_compiler_version.version[1]))
         compiler_version = LooseVersion('0')
