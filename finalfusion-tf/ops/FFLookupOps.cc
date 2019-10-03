@@ -10,18 +10,32 @@ namespace tensorflow {
     .Output("lookup: resource")
     .Attr("shared_name: string = ''")
     .Attr("container: string = ''")
-    .SetShapeFn(shape_inference::NoOutputs);
+    .SetShapeFn(shape_inference::ScalarShape);
 
   REGISTER_OP("InitializeFFEmbeddings")
     .Input("embeds: resource")
     .Input("filename: string")
     .Input("mmap: bool")
-    .SetShapeFn(shape_inference::NoOutputs);
+    .SetShapeFn([](
+        ::tensorflow::shape_inference::InferenceContext *c
+    ) {
+      ShapeHandle input;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 0, &input));
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 0, &input));
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(2), 0, &input));
+      return Status::OK();
+    });
 
 
   REGISTER_OP("CloseFFEmbeddings")
     .Input("embeds: resource")
-    .SetShapeFn(shape_inference::NoOutputs);
+    .SetShapeFn([](
+        ::tensorflow::shape_inference::InferenceContext *c
+    ) {
+      ShapeHandle input;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 0, &input));
+      return Status::OK();
+    });
 
   REGISTER_OP("FFLookup")
     .Input("embeds: resource")
@@ -33,6 +47,8 @@ namespace tensorflow {
     .SetShapeFn([](
       ::tensorflow::shape_inference::InferenceContext *c
     ) {
+      ShapeHandle embeds = c->output(0);
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 0, &embeds));
       ShapeHandle strings_shape = c->input(1);
       ShapeHandle output_shape;
       int embedding_len;
@@ -40,8 +56,6 @@ namespace tensorflow {
       TF_RETURN_IF_ERROR(
         c->Concatenate(strings_shape, c->Vector(embedding_len), &output_shape)
       );
-      ShapeHandle embeds = c->output(0);
-      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 0, &embeds));
       c->set_output(0, output_shape);
       return Status::OK();
     });
